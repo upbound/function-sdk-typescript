@@ -1,0 +1,51 @@
+{
+  "name": "function-sdk-typescript",
+  "version": "0.1.0",
+  "description": "A Crossplane Function SDK for Typescript",
+  "keywords": [
+    "crossplane",
+    "kubernetes",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "github.com/upbound/function-sdk-typescript"
+  },
+  "license": "Apache-2.0",
+  "author": "Steven Borrelli",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "scripts/clean.sh",
+    "build": "npx tsc",
+    "docker-build": "scripts/docker-build.sh",
+    "xpkg-build": "scripts/xpkg-build.sh",
+    "xpkg-push": "scripts/xpkg-push.sh",
+    "xpkg-build-all": "npm run docker-build && npm run xpkg-build",
+    "local-run": "node dist/main.js --insecure --debug"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.4",
+    "@grpc/proto-loader": "^0.8.0",
+    "google-protobuf": "^4.0.0",
+    "kubernetes-models": "^4.5.1",
+    "pino": "^10.1.0",
+    "ts-deepmerge": "^7.0.3",
+    "ts-proto": "^2.8.3"
+  },
+  "devDependencies": {
+    "@types/google-protobuf": "^3.15.12",
+    "ts-node": "^10.9.2"
+  }
+}
