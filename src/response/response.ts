@@ -1,16 +1,56 @@
+/**
+ * Response utilities for working with RunFunctionResponse
+ *
+ * This module provides helper functions to build and manipulate RunFunctionResponse objects,
+ * including setting desired state, managing results, handling context, and working with
+ * composite resources and their status.
+ */
+
 import {
   Resource,
   RunFunctionRequest,
   RunFunctionResponse,
   Severity,
+  Ready,
 } from "../proto/run_function.js";
 import { Duration } from "../proto/google/protobuf/duration.js";
 import { merge } from "ts-deepmerge";
 
+/**
+ * Default time-to-live for function responses (60 seconds).
+ * Crossplane will call the function again when the TTL expires.
+ */
 const DEFAULT_TTL: Duration = { seconds: 60, nanos: 0 };
 
-// to copies the request's tag, desired resources, and context is automatically copied to
-// the response. Using response.to is a good pattern to ensure proper initialization
+export { DEFAULT_TTL };
+
+/**
+ * Bootstrap a response from a request.
+ *
+ * This function creates a new RunFunctionResponse with the request's tag automatically
+ * copied, and initializes the desired state from the request. Using this function is
+ * the recommended pattern to ensure proper response initialization.
+ *
+ * The response will:
+ * - Copy the request's tag to the response metadata
+ * - Initialize the desired state from the request (or create empty if not present)
+ * - Set the TTL (time-to-live) for caching
+ * - Initialize empty results and conditions arrays
+ *
+ * @param req - The RunFunctionRequest to bootstrap from
+ * @param ttl - Optional time-to-live duration (defaults to 60 seconds)
+ * @returns A new RunFunctionResponse initialized from the request
+ *
+ * @example
+ * ```typescript
+ * async RunFunction(req: RunFunctionRequest): Promise<RunFunctionResponse> {
+ *   let rsp = to(req);
+ *   // Add your logic here
+ *   normal(rsp, "Processing complete");
+ *   return rsp;
+ * }
+ * ```
+ */
 export function to(req: RunFunctionRequest, ttl?: Duration): RunFunctionResponse {
   // Initialize desired state if needed
   let desired = req.desired;
@@ -40,7 +80,26 @@ type NamedResource = {
   resource: Resource;
 };
 
-// addDesiredComposedResource adds desired composed resources to the response
+/**
+ * Update a map of desired composed resources by adding or updating a named resource.
+ *
+ * This is a helper function to add a single resource to a map of composed resources.
+ * It's useful when building up desired resources before calling setDesiredComposedResources.
+ *
+ * @param cds - The current map of composed resources
+ * @param res - The named resource to add or update
+ * @returns The updated map of composed resources
+ *
+ * @example
+ * ```typescript
+ * let dcds = getDesiredComposedResources(req);
+ * dcds = updateDesiredComposedResources(dcds, {
+ *   name: "my-bucket",
+ *   resource: Resource.fromJSON({ resource: bucketConfig })
+ * });
+ * rsp = setDesiredComposedResources(rsp, dcds);
+ * ```
+ */
 export function updateDesiredComposedResources(
   cds: { [key: string]: Resource },
   res: NamedResource,
@@ -49,7 +108,26 @@ export function updateDesiredComposedResources(
   return cds;
 }
 
-// fatal adds a fatal result to the response.
+/**
+ * Add a fatal result to the response.
+ *
+ * Fatal results cause the function pipeline run to be considered a failure.
+ * Subsequent functions may still run, but the first fatal result will be
+ * returned as an error. Fatal results should be used for errors that prevent
+ * the function from producing valid output.
+ *
+ * @param rsp - The RunFunctionResponse to add the result to
+ * @param message - The error message describing the fatal condition
+ * @returns The updated response
+ *
+ * @example
+ * ```typescript
+ * if (!requiredInput) {
+ *   fatal(rsp, "Required input 'databaseSize' not provided");
+ *   return rsp;
+ * }
+ * ```
+ */
 export function fatal(
   rsp: RunFunctionResponse,
   message: string,
@@ -63,7 +141,21 @@ export function fatal(
   return rsp;
 }
 
-// fatal adds a normal result to the response.
+/**
+ * Add a normal result to the response.
+ *
+ * Normal results are informational and emitted as normal events and debug logs
+ * associated with the composite resource (XR) or operation. They indicate
+ * successful processing or expected conditions.
+ *
+ * @param rsp - The RunFunctionResponse to add the result to
+ * @param message - The informational message
+ *
+ * @example
+ * ```typescript
+ * normal(rsp, "Successfully configured 3 database replicas");
+ * ```
+ */
 export function normal(rsp: RunFunctionResponse, message: string) {
   if (rsp && rsp.results) {
     rsp.results.push({
@@ -73,19 +165,55 @@ export function normal(rsp: RunFunctionResponse, message: string) {
   }
 }
 
-// fatal adds a warning result to the response.
+/**
+ * Add a warning result to the response.
+ *
+ * Warning results are non-fatal issues that should be brought to attention.
+ * The entire pipeline will run to completion, but warning events and debug logs
+ * will be emitted. Use warnings for recoverable issues or deprecated usage.
+ *
+ * @param rsp - The RunFunctionResponse to add the result to
+ * @param message - The warning message
+ *
+ * @example
+ * ```typescript
+ * if (input.legacyFormat) {
+ *   warning(rsp, "Using deprecated input format, please migrate to new format");
+ * }
+ * ```
+ */
 export function warning(rsp: RunFunctionResponse, message: string) {
   if (rsp && rsp.results) {
     rsp.results.push({
-      severity: Severity.SEVERITY_NORMAL,
+      severity: Severity.SEVERITY_WARNING,
       message: message,
     });
   }
 }
 
-// SetDesiredComposedResources sets the desired composed resources in the
-// supplied response. We use merge to overwrite any existing values.
-// If desired or resources don't exist, they will be initialized.
+/**
+ * Set the desired composed resources in the response.
+ *
+ * This function sets or merges the desired composed resources in the response.
+ * It uses deep merge to combine new resources with any existing resources,
+ * allowing functions to add or modify resources while preserving those set
+ * by previous functions in the pipeline.
+ *
+ * If the desired state or resources map don't exist, they will be initialized.
+ *
+ * @param rsp - The RunFunctionResponse to update
+ * @param dcds - A map of resource names to Resource objects to set as desired
+ * @returns The updated response
+ *
+ * @example
+ * ```typescript
+ * const dcds = getDesiredComposedResources(req);
+ * dcds["my-deployment"] = Resource.fromJSON({
+ *   resource: { apiVersion: "apps/v1", kind: "Deployment", ... }
+ * });
+ * rsp = setDesiredComposedResources(rsp, dcds);
+ * ```
+ */
 export function setDesiredComposedResources(
   rsp: RunFunctionResponse,
   dcds: { [key: string]: Resource },
@@ -103,13 +231,54 @@ export function setDesiredComposedResources(
   return rsp;
 }
 
-// update a Resource
-// TODO: Can we make this Generic?
+/**
+ * Update a resource by merging source into target.
+ *
+ * This function performs a deep merge of the source resource into the target resource,
+ * allowing you to update specific fields while preserving others. The merge is performed
+ * using the ts-deepmerge library.
+ *
+ * @param src - The source Resource containing updates
+ * @param tgt - The target Resource to be updated
+ * @returns A new Resource with merged values
+ *
+ * @example
+ * ```typescript
+ * const existing = getDesiredComposedResources(req)["my-resource"];
+ * const updated = update(
+ *   Resource.fromJSON({ resource: { spec: { replicas: 5 } } }),
+ *   existing
+ * );
+ * ```
+ */
 export function update(src: Resource, tgt: Resource): Resource {
   return merge(tgt, src) as Resource;
 }
 
-// setDesiredCompositeStatus updates the Composite status
+/**
+ * Set the desired composite resource status.
+ *
+ * This function updates only the status field of the desired composite resource.
+ * It merges the provided status with any existing status, allowing partial updates.
+ * Note that functions should only set the status of composite resources (XRs),
+ * not their metadata or spec.
+ *
+ * @param params - Object containing the response and status to set
+ * @param params.rsp - The RunFunctionResponse to update
+ * @param params.status - The status object to merge into the composite resource
+ * @returns The updated response
+ *
+ * @example
+ * ```typescript
+ * rsp = setDesiredCompositeStatus({
+ *   rsp,
+ *   status: {
+ *     phase: "Ready",
+ *     conditions: [{ type: "Synced", status: "True" }]
+ *   }
+ * });
+ * ```
+ */
 export function setDesiredCompositeStatus(
 { rsp, status }: { rsp: RunFunctionResponse; status: { [key: string]: any; }; },
 ): RunFunctionResponse {
@@ -118,5 +287,99 @@ export function setDesiredCompositeStatus(
       "status": status,
     }) as { [key: string]: any };
   }
+  return rsp;
+}
+
+/**
+ * Set a context key in the response.
+ *
+ * Context allows functions to pass arbitrary data to subsequent functions in the
+ * pipeline. The context is initialized if it doesn't exist. Crossplane discards
+ * all context returned by the last function in the pipeline.
+ *
+ * @param rsp - The RunFunctionResponse to update
+ * @param key - The context key to set
+ * @param value - The value to associate with the key (can be any JSON-serializable value)
+ * @returns The updated response
+ *
+ * @example
+ * ```typescript
+ * // Set context for next function in pipeline
+ * rsp = setContextKey(rsp, "database-endpoint", "db.example.com:5432");
+ * rsp = setContextKey(rsp, "connection-config", { host: "db.example.com", port: 5432 });
+ * ```
+ */
+export function setContextKey(rsp: RunFunctionResponse, key: string, value: any): RunFunctionResponse {
+  if (!rsp.context) {
+    rsp.context = {};
+  }
+  rsp.context[key] = value;
+  return rsp;
+}
+
+/**
+ * Set the desired composite resource in the response.
+ *
+ * This function sets the entire desired composite resource and optionally its ready status.
+ * The ready status can be used to override Crossplane's standard readiness detection,
+ * which normally determines the composite's ready state based on composed resources.
+ *
+ * Note: Ready status is only used for composition functions, not operations.
+ *
+ * @param rsp - The RunFunctionResponse to update
+ * @param resource - The desired composite resource to set
+ * @param ready - Optional ready status (READY_TRUE, READY_FALSE, or READY_UNSPECIFIED)
+ * @returns The updated response
+ *
+ * @example
+ * ```typescript
+ * const composite = getObservedCompositeResource(req);
+ * if (composite) {
+ *   // Modify and set as desired with ready status
+ *   rsp = setDesiredCompositeResource(rsp, composite, Ready.READY_TRUE);
+ * }
+ * ```
+ */
+export function setDesiredCompositeResource(
+  rsp: RunFunctionResponse,
+  resource: Resource,
+  ready?: Ready
+): RunFunctionResponse {
+  if (!rsp.desired) {
+    rsp.desired = { composite: undefined, resources: {} };
+  }
+
+  // Create a new resource with the specified ready status
+  rsp.desired.composite = {
+    ...resource,
+    ready: ready !== undefined ? ready : Ready.READY_UNSPECIFIED,
+  };
+
+  return rsp;
+}
+
+/**
+ * Set the function output in the response.
+ *
+ * Function output is specific to operation functions. The output must be a
+ * JSON-serializable object. Composite resources (XRs) will discard any function
+ * output, as it's only used by operations.
+ *
+ * @param rsp - The RunFunctionResponse to update
+ * @param output - The output object to set (must be JSON-serializable)
+ * @returns The updated response
+ *
+ * @example
+ * ```typescript
+ * // For operation functions
+ * rsp = setOutput(rsp, {
+ *   resourcesCreated: 5,
+ *   status: "success",
+ *   details: { timestamp: new Date().toISOString() }
+ * });
+ * ```
+ */
+export function setOutput(rsp: RunFunctionResponse, output: { [key: string]: any }): RunFunctionResponse {
+  rsp.output = output;
   return rsp;
 }

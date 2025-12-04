@@ -9,6 +9,13 @@ export {
     getDesiredCompositeResource,
     getObservedCompositeResource,
     getDesiredComposedResources,
+    getObservedComposedResources,
+    getInput,
+    getContextKey,
+    getRequiredResources,
+    getExtraResources,
+    getCredentials as getRequestCredentials,
+    type ConnectionDetails,
 } from "./request/request.js";
 
 // Response helpers
@@ -19,9 +26,27 @@ export {
     warning,
     setDesiredComposedResources,
     setDesiredCompositeStatus,
+    setDesiredCompositeResource,
     updateDesiredComposedResources,
     update,
+    setContextKey,
+    setOutput,
+    DEFAULT_TTL,
 } from "./response/response.js";
+
+// Resource utilities
+export {
+    asObject,
+    asStruct,
+    fromObject,
+    toObject,
+    newDesiredComposed,
+    mustStructObject,
+    mustStructJSON,
+    type Composite,
+    type ObservedComposed,
+    type DesiredComposed,
+} from "./resource/resource.js";
 
 // Runtime utilities
 export {
@@ -39,6 +64,13 @@ export {
     Severity,
     Result,
     State,
+    Ready,
+    Target,
+    Status,
+    Condition,
+    Resources,
+    Credentials,
+    CredentialData,
     FunctionRunnerServiceService,
 } from "./proto/run_function.js";
 
