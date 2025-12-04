@@ -29,11 +29,8 @@
   "scripts": {
     "clean": "scripts/clean.sh",
     "build": "npx tsc",
-    "docker-build": "scripts/docker-build.sh",
-    "xpkg-build": "scripts/xpkg-build.sh",
-    "xpkg-push": "scripts/xpkg-push.sh",
-    "xpkg-build-all": "npm run docker-build && npm run xpkg-build",
-    "local-run": "node dist/main.js --insecure --debug"
+    "pack": "npm pack",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.4",
