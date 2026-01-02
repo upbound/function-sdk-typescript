@@ -37,7 +37,7 @@ export function getDesiredComposedResources(
     req: RunFunctionRequest,
 ): { [key: string]: Resource } {
     if (req.desired?.resources) {
-        return req.desired?.resources;
+        return req.desired.resources;
     }
     return {};
 }
@@ -53,7 +53,7 @@ export function getObservedComposedResources(
     req: RunFunctionRequest,
 ): { [key: string]: Resource } {
     if (req.observed?.resources) {
-        return req.observed?.resources;
+        return req.observed.resources;
     }
     return {};
 }

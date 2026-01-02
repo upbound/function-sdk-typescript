@@ -21,22 +21,23 @@ export interface ServerOptions {
 export function getServerCredentials(
     opts?: ServerOptions,
 ): grpc.ServerCredentials {
-    if (opts?.insecure || opts?.tlsServerCertsDir === "" || opts?.tlsServerCertsDir === undefined ) {
+    if (opts?.insecure || opts?.tlsServerCertsDir === "" || opts?.tlsServerCertsDir === undefined) {
         return grpc.ServerCredentials.createInsecure();
     }
-    try {
-        const tlsCertsDir = opts?.tlsServerCertsDir;
-        const privateKey = readFileSync(join(tlsCertsDir, "tls.key"));
-        const certChain = readFileSync(join(tlsCertsDir, "tls.crt"));
-        const rootCerts = readFileSync(join(tlsCertsDir, "ca.crt"));
-        return grpc.ServerCredentials.createSsl(
-            rootCerts,
-            [{ private_key: privateKey, cert_chain: certChain }],
-            false, // Set to false to make client certificates optional
-        );
-    } catch (err) {
-        throw err;
+
+    const tlsCertsDir = opts!.tlsServerCertsDir;
+    if (typeof tlsCertsDir !== "string" || tlsCertsDir.trim() === "") {
+        throw new Error("tlsServerCertsDir must be a non-empty string when TLS is enabled");
     }
+
+    const privateKey = readFileSync(join(tlsCertsDir, "tls.key"));
+    const certChain = readFileSync(join(tlsCertsDir, "tls.crt"));
+    const rootCerts = readFileSync(join(tlsCertsDir, "ca.crt"));
+    return grpc.ServerCredentials.createSsl(
+        rootCerts,
+        [{ private_key: privateKey, cert_chain: certChain }],
+        false, // Set to false to make client certificates optional
+    );
 }
 
 // newGrpcServer creates a new gRPC server and registers our function runner
