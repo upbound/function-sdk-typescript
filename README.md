@@ -6,17 +6,26 @@ A TypeScript SDK for building [Crossplane Composition Functions](https://docs.cr
 
 This SDK can be used in two ways:
 
-1. **As an importable library**: Install and import into your own projects (recommended for users)
+1. **As an importable library**: Install and import into your own projects (recommended)
 2. **As a development base**: Clone and modify this repository directly
 
-For detailed usage instructions on importing this SDK into your projects, see [USAGE.md](USAGE.md).
+For complete usage instructions on importing this SDK into your projects, see [USAGE.md](USAGE.md).
+
+## Features
+
+- **Type-safe interfaces** - Full TypeScript support with comprehensive type definitions
+- **Simple API** - Easy-to-use helper functions for common operations
+- **Kubernetes integration** - Works seamlessly with `kubernetes-models` for type-safe resource creation
+- **Error handling** - Built-in error handling and logging support
+- **Protocol buffers** - Auto-generated types from Crossplane protobuf definitions
+- **Extensible** - Implement the `FunctionHandler` interface to create custom functions
 
 ## Quick Start (Using as an Importable SDK)
 
 ### Installation
 
 ```bash
-npm install function-sdk-typescript
+npm install @crossplane-org/function-sdk-typescript
 ```
 
 ### Creating Your Function
@@ -24,27 +33,52 @@ npm install function-sdk-typescript
 Implement the `FunctionHandler` interface:
 
 ```typescript
-import type { FunctionHandler, RunFunctionRequest, RunFunctionResponse, Logger } from "function-sdk-typescript";
-import { to, normal, setDesiredComposedResources, getDesiredComposedResources, Resource } from "function-sdk-typescript";
+import type {
+    FunctionHandler,
+    RunFunctionRequest,
+    RunFunctionResponse,
+    Logger
+} from "@crossplane-org/function-sdk-typescript";
+import {
+    to,
+    normal,
+    fatal,
+    setDesiredComposedResources,
+    getDesiredComposedResources,
+    getObservedCompositeResource,
+    Resource
+} from "@crossplane-org/function-sdk-typescript";
 
 export class MyFunction implements FunctionHandler {
     async RunFunction(req: RunFunctionRequest, logger?: Logger): Promise<RunFunctionResponse> {
         let rsp = to(req);
-        let dcds = getDesiredComposedResources(req);
 
-        // Your function logic here
-        dcds["my-resource"] = Resource.fromJSON({
-            resource: {
-                apiVersion: "v1",
-                kind: "ConfigMap",
-                metadata: { name: "my-config" },
-                data: { key: "value" }
-            }
-        });
+        try {
+            // Get observed composite resource and desired composed resources
+            const oxr = getObservedCompositeResource(req);
+            let dcds = getDesiredComposedResources(req);
 
-        rsp = setDesiredComposedResources(rsp, dcds);
-        normal(rsp, "Function completed");
-        return rsp;
+            logger?.info("Processing function request");
+
+            // Your function logic here - create a ConfigMap
+            dcds["my-resource"] = Resource.fromJSON({
+                resource: {
+                    apiVersion: "v1",
+                    kind: "ConfigMap",
+                    metadata: { name: "my-config" },
+                    data: { key: "value" }
+                }
+            });
+
+            rsp = setDesiredComposedResources(rsp, dcds);
+            normal(rsp, "Function completed successfully");
+
+            return rsp;
+        } catch (error) {
+            logger?.error({ error }, "Function failed");
+            fatal(rsp, error instanceof Error ? error.message : String(error));
+            return rsp;
+        }
     }
 }
 ```
@@ -65,6 +99,23 @@ See [USAGE.md](USAGE.md) for complete examples and API documentation.
 ```bash
 npm install
 ```
+
+### Testing
+
+The SDK uses [Vitest](https://vitest.dev/) for testing. Tests are located alongside source files with the `.test.ts` extension.
+
+```bash
+# Run tests once
+npm test
+
+# Run tests in watch mode (for development)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+Test files are automatically excluded from the build output.
 
 ### Running the Example Function
 
@@ -169,12 +220,19 @@ dcds["my-pod"] = Resource.fromJSON({
 
 #### Request Helpers
 
+The SDK provides comprehensive request helpers to extract data from RunFunctionRequest:
+
 ```typescript
 import {
     getObservedCompositeResource,
     getDesiredCompositeResource,
     getDesiredComposedResources,
-} from "../request/request.js";
+    getObservedComposedResources,
+    getInput,
+    getContextKey,
+    getRequiredResources,
+    getCredentials,
+} from "@crossplane-org/function-sdk-typescript";
 
 // Get the observed composite resource (XR)
 const oxr = getObservedCompositeResource(req);
@@ -184,29 +242,99 @@ const dxr = getDesiredCompositeResource(req);
 
 // Get desired composed resources
 const dcds = getDesiredComposedResources(req);
+
+// Get observed composed resources
+const ocds = getObservedComposedResources(req);
+
+// Get function input configuration
+const input = getInput(req);
+
+// Get context value from previous function
+const [value, exists] = getContextKey(req, "my-key");
+
+// Get required resources
+const required = getRequiredResources(req);
+
+// Get credentials
+const creds = getCredentials(req, "aws-creds");
 ```
 
 #### Response Helpers
+
+The SDK provides response helpers to build and manipulate RunFunctionResponse:
 
 ```typescript
 import {
     to,
     setDesiredComposedResources,
+    setDesiredCompositeResource,
+    setDesiredCompositeStatus,
+    setContextKey,
+    setOutput,
     normal,
     fatal,
     warning,
-} from "../response/response.js";
+    update,
+    DEFAULT_TTL,
+} from "@crossplane-org/function-sdk-typescript";
 
-// Initialize response from request
-let rsp = to(req);
+// Initialize response from request (with optional TTL)
+let rsp = to(req, DEFAULT_TTL);
 
 // Set desired composed resources (merges with existing)
 rsp = setDesiredComposedResources(rsp, dcds);
+
+// Set desired composite resource
+rsp = setDesiredCompositeResource(rsp, dxr);
+
+// Update composite resource status
+rsp = setDesiredCompositeStatus({ rsp, status: { ready: true } });
+
+// Set context for next function
+rsp = setContextKey(rsp, "my-key", "my-value");
+
+// Set output (returned to user)
+rsp = setOutput(rsp, { result: "success" });
 
 // Add result messages
 normal(rsp, "Success message");
 warning(rsp, "Warning message");
 fatal(rsp, "Fatal error message");
+
+// Update a resource by merging
+const updated = update(sourceResource, targetResource);
+```
+
+#### Resource Helpers
+
+The SDK provides utilities for working with Kubernetes resources:
+
+```typescript
+import {
+    Resource,
+    asObject,
+    asStruct,
+    fromObject,
+    toObject,
+    newDesiredComposed,
+} from "@crossplane-org/function-sdk-typescript";
+
+// Create a Resource from a plain object
+const resource = fromObject({
+    apiVersion: "v1",
+    kind: "ConfigMap",
+    metadata: { name: "my-config" }
+});
+
+// Extract plain object from Resource
+const obj = toObject(resource);
+
+// Convert between struct and object formats
+const struct = asStruct(obj);
+const plainObj = asObject(struct);
+
+// Create a new empty DesiredComposed resource
+const desired = newDesiredComposed();
 ```
 
 ### Error Handling
@@ -220,58 +348,116 @@ try {
 }
 ```
 
-## Building and Deployment
+## Publishing the SDK
 
-### Build TypeScript
+This section is for SDK maintainers who want to publish updates to npm.
+
+### Prepare for Publishing
+
+1. Update version in [package.json](package.json)
+2. Build the TypeScript code:
+
+   ```bash
+   npm run build
+   ```
+
+3. Verify the build output in `dist/`:
+
+   ```bash
+   ls -la dist/
+   ```
+
+### Test the Package Locally
+
+Before publishing, test the package locally:
 
 ```bash
-npm run build
+# Create a tarball
+npm pack
+
+# This creates function-sdk-typescript-<version>.tgz
+# Install it in another project to test
+npm install /path/to/function-sdk-typescript-<version>.tgz
 ```
 
-### Build Docker Image
-
-**note** : package building will move the the template repo.
+### Publish to npm
 
 ```bash
-npm run docker-build
+# Dry run to see what will be published
+npm publish --dry-run
+
+# Publish to npm (requires authentication)
+npm publish
 ```
 
-### Build Crossplane Package
+The [package.json](package.json) `files` field ensures only necessary files are included:
 
-```bash
-npm run xpkg-build
-```
+- `dist/` - Compiled JavaScript and type definitions
+- `README.md` - Documentation
 
-### Push Package
+### Building Function Containers
 
-```bash
-npm run xpkg-push
-```
+If you're developing a function based on this SDK and need to containerize it:
+
+1. Create a `Dockerfile` for your function
+2. Build the image with your function code
+3. Package as a Crossplane function package
+
+See the [Crossplane documentation](https://docs.crossplane.io/latest/concepts/composition-functions/#build-a-function) for details on building and packaging functions.
 
 ## Development
 
 ### Generating Protobuf Code
 
-This repo uses the Protobuf definitions located at <https://github.com/crossplane/crossplane/tree/main/proto/fn>. If this upstream definition is updated, it can be copied into this repo
-and the files regenerated.
+This repo uses the Protobuf definitions from [Crossplane](https://github.com/crossplane/crossplane/tree/main/proto/fn). If the upstream definition is updated, copy it into this repo and regenerate the TypeScript code.
 
-To regenerate TypeScript code from the Protobuf definitions, run:
+#### Prerequisites
+
+You need the Protocol Buffer compiler (`protoc`) installed:
+
+```bash
+# macOS
+brew install protobuf
+
+# Verify installation
+protoc --version  # Should be 3.x or higher
+```
+
+#### Regenerating Code
+
+To regenerate TypeScript code from the Protobuf definitions:
 
 ```bash
 ./scripts/protoc-gen.sh
 ```
 
-This uses ts-proto to generate:
+This script uses [ts-proto](https://github.com/stephenh/ts-proto) to generate:
 
 - Type definitions from protobuf messages
 - gRPC service stubs for the FunctionRunner service
+- Conversion utilities for Protocol Buffer types
+
+After regenerating, rebuild the project:
+
+```bash
+npm run build
+```
 
 ### Local Development Workflow
 
-1. Make changes to `src/function/function.ts`
+For SDK contributors making changes to the SDK itself:
+
+1. Make changes to source files in `src/`
+2. Build the SDK: `npm run build`
+3. Test locally by creating a tarball: `npm pack`
+4. Install the tarball in a test project to verify changes
+
+For testing with an example function:
+
+1. Implement an example function using the SDK
 2. Build: `npm run build`
-3. Run: `npm run local-run`
-4. Test: `cd example && ./render.sh`
+3. Run the function server locally (if you have a main entry point)
+4. Test with `crossplane beta render` using example compositions
 
 ### Using with Crossplane
 
@@ -318,57 +504,171 @@ Resource.fromJSON({
 
 
 
+## API Reference
+
+### Exported Types and Interfaces
+
+The SDK exports all necessary types and interfaces from a single entry point:
+
+```typescript
+import {
+    // Core interfaces
+    FunctionHandler,
+    FunctionRunner,
+    Logger,
+
+    // Request/Response types
+    RunFunctionRequest,
+    RunFunctionResponse,
+    Resource,
+
+    // Resource types
+    Composite,
+    ObservedComposed,
+    DesiredComposed,
+    ConnectionDetails,
+
+    // Protocol buffer types
+    Severity,
+    Result,
+    State,
+    Ready,
+    Target,
+    Status,
+    Condition,
+    Resources,
+    Credentials,
+    CredentialData,
+
+    // Runtime types
+    ServerOptions,
+} from "@crossplane-org/function-sdk-typescript";
+```
+
+### Core Functions
+
+- **`to(req, ttl?)`** - Initialize a response from a request
+- **`normal(rsp, message)`** - Add a normal (info) result
+- **`warning(rsp, message)`** - Add a warning result
+- **`fatal(rsp, message)`** - Add a fatal error result
+- **`getObservedCompositeResource(req)`** - Get the observed XR
+- **`getDesiredCompositeResource(req)`** - Get the desired XR
+- **`getDesiredComposedResources(req)`** - Get desired composed resources
+- **`getObservedComposedResources(req)`** - Get observed composed resources
+- **`setDesiredComposedResources(rsp, resources)`** - Set desired composed resources
+- **`setDesiredCompositeStatus({rsp, status})`** - Update XR status
+- **`setContextKey(rsp, key, value)`** - Set context for next function
+- **`getContextKey(req, key)`** - Get context from previous function
+- **`getInput(req)`** - Get function input configuration
+- **`getRequiredResources(req)`** - Get required resources
+- **`getCredentials(req, name)`** - Get credentials by name (throws error if not found)
+
+See [USAGE.md](USAGE.md) for detailed API documentation and examples.
+
 ## Dependencies
 
 ### Runtime Dependencies
 
-- `@grpc/grpc-js` - gRPC implementation
-- `ts-proto` - TypeScript protobuf code generator
-- `ts-deepmerge` - Deep merging utility for resources
-- `pino` - Structured logging
-- `kubernetes-models` - Type-safe Kubernetes resource models
+- **`@grpc/grpc-js`** - gRPC implementation for Node.js
+- **`@grpc/proto-loader`** - Protocol buffer loader
+- **`google-protobuf`** - Google Protocol Buffers runtime
+- **`ts-proto`** - TypeScript protobuf code generator
+- **`ts-deepmerge`** - Deep merging utility for resources
+- **`pino`** - Fast, structured JSON logger
+- **`kubernetes-models`** - Type-safe Kubernetes resource models (optional)
 
 ### Development Dependencies
 
-- `typescript` - TypeScript compiler
-- `@types/node` - Node.js type definitions
-- `protoc` - Protocol buffer compiler
+- **`typescript`** - TypeScript compiler (v5.7+)
+- **`@types/node`** - Node.js type definitions
+- **`@types/google-protobuf`** - Google Protobuf type definitions
+- **`ts-node`** - TypeScript execution engine
+- **`vitest`** - Fast unit test framework
+- **`@vitest/coverage-v8`** - Code coverage reporting
+- **Protocol Buffer compiler (`protoc`)** - Required for regenerating protobuf code
 
 ## Examples
 
-Check the [example/](example/) directory for:
+The repository includes an example function implementation:
 
-- Sample Composition and XR definitions
-- Test fixtures
-- Render scripts
+- [src/example-function.ts](src/example-function.ts) - A complete example showing how to implement the `FunctionHandler` interface with Deployment and Pod creation
+
+For more detailed examples and usage patterns, see:
+
+- [USAGE.md](USAGE.md) - Complete usage guide with examples
+- [Crossplane Function Documentation](https://docs.crossplane.io/latest/concepts/composition-functions/)
 
 ## Troubleshooting
 
-### Port Already in Use
+### Installation Issues
 
-If you see `EADDRINUSE` error, another process is using port 9443:
+**Problem**: Package not found or installation fails
 
 ```bash
+# Verify npm registry access
+npm ping
+
+# Try installing with verbose output
+npm install @crossplane-org/function-sdk-typescript --verbose
+```
+
+### Type Errors
+
+**Problem**: TypeScript can't find types from the SDK
+
+**Solution**: Ensure your `tsconfig.json` includes:
+
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "esModuleInterop": true
+  }
+}
+```
+
+### Import Errors
+
+**Problem**: `Cannot find module '@crossplane-org/function-sdk-typescript'`
+
+**Solution**: Verify the package is installed:
+
+```bash
+npm list @crossplane-org/function-sdk-typescript
+```
+
+If missing, reinstall:
+
+```bash
+npm install @crossplane-org/function-sdk-typescript
+```
+
+### Port Already in Use (when running functions)
+
+**Problem**: `EADDRINUSE` error when starting function server
+
+**Solution**: Kill the process using the port:
+
+```bash
+# Find and kill process on port 9443
 lsof -ti:9443 | xargs kill -9
 ```
 
-### Protobuf Compilation Errors
+### Protocol Buffer Compilation Errors (for SDK contributors)
 
-Ensure protoc is installed and in your PATH:
+**Problem**: Errors when running `./scripts/protoc-gen.sh`
 
-```bash
-protoc --version
-```
-
-Should show version 3.x or higher.
-
-### Type Errors After Regenerating Protos
-
-Clean and rebuild:
+**Solution**: Ensure Protocol Buffer compiler is installed:
 
 ```bash
-npm run clean
-./protoc-gen.sh
+# Check version
+protoc --version  # Should be 3.x or higher
+
+# macOS installation
+brew install protobuf
+
+# After installing, regenerate
+./scripts/protoc-gen.sh
 npm run build
 ```
 
@@ -379,8 +679,9 @@ Contributions are welcome! Please:
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+4. Add tests if applicable (use `npm test` to run tests)
+5. Ensure all tests pass and the build succeeds (`npm run build`)
+6. Submit a pull request
 
 ## License
 
@@ -388,8 +689,21 @@ Apache 2.0
 
 ## Resources
 
+### Crossplane Documentation
+
 - [Crossplane Documentation](https://docs.crossplane.io)
 - [Composition Functions](https://docs.crossplane.io/latest/concepts/composition-functions/)
-- [Function SDK Guide](https://docs.crossplane.io/knowledge-base/guides/write-a-composition-function-in-go/)
-- [ts-proto Documentation](https://github.com/stephenh/ts-proto)
-- [kubernetes-models](https://github.com/tommy351/kubernetes-models-ts)
+- [Write a Composition Function](https://docs.crossplane.io/latest/concepts/composition-functions/#write-a-composition-function)
+- [Composition Function API](https://docs.crossplane.io/latest/concepts/composition-functions/#composition-function-api)
+
+### SDK Documentation
+
+- [USAGE.md](USAGE.md) - Complete usage guide for this SDK
+- [SDK-REFACTORING.md](SDK-REFACTORING.md) - Details about the SDK refactoring
+
+### Related Tools
+
+- [ts-proto](https://github.com/stephenh/ts-proto) - TypeScript protobuf code generator
+- [kubernetes-models](https://github.com/tommy351/kubernetes-models-ts) - Type-safe Kubernetes resource models for TypeScript
+- [Pino](https://getpino.io/) - Fast JSON logger
+- [gRPC-js](https://github.com/grpc/grpc-node/tree/master/packages/grpc-js) - Pure JavaScript gRPC implementation
