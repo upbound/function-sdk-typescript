@@ -13,8 +13,7 @@ export {
     getInput,
     getContextKey,
     getRequiredResources,
-    getExtraResources,
-    getCredentials as getRequestCredentials,
+    getCredentials,
 } from "./request/request.js";
 
 // Response helpers
@@ -52,7 +51,7 @@ export {
 export {
     newGrpcServer,
     startServer,
-    getCredentials,
+    getServerCredentials,
     type ServerOptions,
 } from "./runtime/runtime.js";
 

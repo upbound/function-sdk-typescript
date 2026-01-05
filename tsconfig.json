@@ -6,7 +6,9 @@
   "exclude": [
     "dist",
     "node_modules",
-    "src/proto/**"
+    "src/proto/**",
+    "**/*.test.ts",
+    "vitest.config.ts"
   ],
   "compilerOptions": {
     // File Layout
