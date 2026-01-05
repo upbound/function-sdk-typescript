@@ -6,7 +6,7 @@
  * required resources, and credentials.
  */
 
-import { Resource, RunFunctionRequest, Resources, Credentials, Resources, Credentials } from "../proto/run_function.js";
+import { Credentials, Resource, Resources, RunFunctionRequest } from "../proto/run_function.js";
 
 /**
  * Get the desired composite resource (XR) from the request.
@@ -87,8 +87,8 @@ export function getDesiredComposedResources(req: RunFunctionRequest): { [key: st
  *
  * @example
  * ```typescript
- * const ocds = getObservedComposedResources(req);
- * for (const [name, resource] of Object.entries(ocds)) {
+ * const observedComposed = getObservedComposedResources(req);
+ * for (const [name, resource] of Object.entries(observedComposed)) {
  *   if (resource.connectionDetails) {
  *     console.log(`Resource ${name} has connection details`);
  *   }

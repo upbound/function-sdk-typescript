@@ -563,7 +563,7 @@ describe('getRequiredResources', () => {
 });
 
 describe('getCredentials', () => {
-    it('should return undefined when no credentials exist', () => {
+    it('should throw error when no credentials exist', () => {
         const req: RunFunctionRequest = {
             meta: undefined,
             observed: undefined,
@@ -575,11 +575,10 @@ describe('getCredentials', () => {
             requiredResources: {},
         };
 
-        const result = getCredentials(req, 'aws-creds');
-        expect(result).toBeUndefined();
+        expect(() => getCredentials(req, 'aws-creds')).toThrow('credentials "aws-creds" not found');
     });
 
-    it('should return undefined when credential name does not exist', () => {
+    it('should throw error when credential name does not exist', () => {
         const req: RunFunctionRequest = {
             meta: undefined,
             observed: undefined,
@@ -599,8 +598,7 @@ describe('getCredentials', () => {
             requiredResources: {},
         };
 
-        const result = getCredentials(req, 'aws-creds');
-        expect(result).toBeUndefined();
+        expect(() => getCredentials(req, 'aws-creds')).toThrow('credentials "aws-creds" not found');
     });
 
     it('should return credentials when they exist', () => {
