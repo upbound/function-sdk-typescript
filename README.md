@@ -4,21 +4,9 @@ A TypeScript SDK for building [Crossplane Composition Functions](https://docs.cr
 
 ## Overview
 
-This SDK can be used in two ways:
-
-1. **As an importable library**: Install and import into your own projects (recommended)
-2. **As a development base**: Clone and modify this repository directly
+This SDK can be used as the base of a Crossplane Composition function.
 
 For complete usage instructions on importing this SDK into your projects, see [USAGE.md](USAGE.md).
-
-## Features
-
-- **Type-safe interfaces** - Full TypeScript support with comprehensive type definitions
-- **Simple API** - Easy-to-use helper functions for common operations
-- **Kubernetes integration** - Works seamlessly with `kubernetes-models` for type-safe resource creation
-- **Error handling** - Built-in error handling and logging support
-- **Protocol buffers** - Auto-generated types from Crossplane protobuf definitions
-- **Extensible** - Implement the `FunctionHandler` interface to create custom functions
 
 ## Quick Start (Using as an Importable SDK)
 
@@ -411,7 +399,7 @@ See the [Crossplane documentation](https://docs.crossplane.io/latest/concepts/co
 
 This repo uses the Protobuf definitions from [Crossplane](https://github.com/crossplane/crossplane/tree/main/proto/fn). If the upstream definition is updated, copy it into this repo and regenerate the TypeScript code.
 
-#### Prerequisites
+#### Protocol Buffers Prerequisites
 
 You need the Protocol Buffer compiler (`protoc`) installed:
 
@@ -502,13 +490,11 @@ Resource.fromJSON({
 });
 ```
 
-
-
 ## API Reference
 
 ### Exported Types and Interfaces
 
-The SDK exports all necessary types and interfaces from a single entry point:
+The SDK exports all types and interfaces from a single entry point:
 
 ```typescript
 import {
@@ -586,17 +572,6 @@ See [USAGE.md](USAGE.md) for detailed API documentation and examples.
 - **`vitest`** - Fast unit test framework
 - **`@vitest/coverage-v8`** - Code coverage reporting
 - **Protocol Buffer compiler (`protoc`)** - Required for regenerating protobuf code
-
-## Examples
-
-The repository includes an example function implementation:
-
-- [src/example-function.ts](src/example-function.ts) - A complete example showing how to implement the `FunctionHandler` interface with Deployment and Pod creation
-
-For more detailed examples and usage patterns, see:
-
-- [USAGE.md](USAGE.md) - Complete usage guide with examples
-- [Crossplane Function Documentation](https://docs.crossplane.io/latest/concepts/composition-functions/)
 
 ## Troubleshooting
 
@@ -699,7 +674,6 @@ Apache 2.0
 ### SDK Documentation
 
 - [USAGE.md](USAGE.md) - Complete usage guide for this SDK
-- [SDK-REFACTORING.md](SDK-REFACTORING.md) - Details about the SDK refactoring
 
 ### Related Tools
 
