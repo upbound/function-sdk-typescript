@@ -12,9 +12,9 @@ import {
   RunFunctionResponse,
   Severity,
   Ready,
-} from "../proto/run_function.js";
-import { Duration } from "../proto/google/protobuf/duration.js";
-import { merge } from "ts-deepmerge";
+} from '../proto/run_function.js';
+import { Duration } from '../proto/google/protobuf/duration.js';
+import { merge } from 'ts-deepmerge';
 
 /**
  * Default time-to-live for function responses (60 seconds).
@@ -69,7 +69,7 @@ export function to(req: RunFunctionRequest, ttl?: Duration): RunFunctionResponse
     conditions: [],
     context: req.context,
     desired: desired,
-    meta: { tag: req.meta?.tag || "", ttl: ttl || DEFAULT_TTL },
+    meta: { tag: req.meta?.tag || '', ttl: ttl || DEFAULT_TTL },
     requirements: undefined,
     results: [],
   };
@@ -102,7 +102,7 @@ type NamedResource = {
  */
 export function updateDesiredComposedResources(
   cds: { [key: string]: Resource },
-  res: NamedResource,
+  res: NamedResource
 ): { [key: string]: Resource } {
   cds[res.name] = res.resource;
   return cds;
@@ -128,10 +128,7 @@ export function updateDesiredComposedResources(
  * }
  * ```
  */
-export function fatal(
-  rsp: RunFunctionResponse,
-  message: string,
-): RunFunctionResponse {
+export function fatal(rsp: RunFunctionResponse, message: string): RunFunctionResponse {
   if (rsp && rsp.results) {
     rsp.results.push({
       severity: Severity.SEVERITY_FATAL,
@@ -216,7 +213,7 @@ export function warning(rsp: RunFunctionResponse, message: string) {
  */
 export function setDesiredComposedResources(
   rsp: RunFunctionResponse,
-  dcds: { [key: string]: Resource },
+  dcds: { [key: string]: Resource }
 ): RunFunctionResponse {
   // Ensure desired state exists
   if (!rsp.desired) {
@@ -266,7 +263,7 @@ export function setDesiredComposedResources(
  */
 export function setDesiredResources(
   rsp: RunFunctionResponse,
-  resources: { [key: string]: { [key: string]: any } },
+  resources: { [key: string]: { [key: string]: any } }
 ): RunFunctionResponse {
   // Ensure desired state exists
   if (!rsp.desired) {
@@ -335,9 +332,13 @@ export function update(src: Resource, tgt: Resource): Resource {
  * });
  * ```
  */
-export function setDesiredCompositeStatus(
-{ rsp, status }: { rsp: RunFunctionResponse; status: { [key: string]: any; }; },
-): RunFunctionResponse {
+export function setDesiredCompositeStatus({
+  rsp,
+  status,
+}: {
+  rsp: RunFunctionResponse;
+  status: { [key: string]: any };
+}): RunFunctionResponse {
   // Ensure desired state exists
   if (!rsp.desired) {
     rsp.desired = { composite: undefined, resources: {} };
@@ -355,7 +356,7 @@ export function setDesiredCompositeStatus(
 
   // Merge the status
   rsp.desired.composite.resource = merge(rsp.desired.composite.resource, {
-    "status": status,
+    status: status,
   }) as { [key: string]: any };
 
   return rsp;
@@ -380,7 +381,11 @@ export function setDesiredCompositeStatus(
  * rsp = setContextKey(rsp, "connection-config", { host: "db.example.com", port: 5432 });
  * ```
  */
-export function setContextKey(rsp: RunFunctionResponse, key: string, value: any): RunFunctionResponse {
+export function setContextKey(
+  rsp: RunFunctionResponse,
+  key: string,
+  value: any
+): RunFunctionResponse {
   if (!rsp.context) {
     rsp.context = {};
   }
@@ -452,7 +457,10 @@ export function setDesiredCompositeResource(
  * });
  * ```
  */
-export function setOutput(rsp: RunFunctionResponse, output: { [key: string]: any }): RunFunctionResponse {
+export function setOutput(
+  rsp: RunFunctionResponse,
+  output: { [key: string]: any }
+): RunFunctionResponse {
   rsp.output = output;
   return rsp;
 }

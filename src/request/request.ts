@@ -6,7 +6,7 @@
  * required resources, and credentials.
  */
 
-import { Credentials, Resource, Resources, RunFunctionRequest } from "../proto/run_function.js";
+import { Credentials, Resource, Resources, RunFunctionRequest } from '../proto/run_function.js';
 
 /**
  * Get the desired composite resource (XR) from the request.
@@ -26,7 +26,7 @@ import { Credentials, Resource, Resources, RunFunctionRequest } from "../proto/r
  * ```
  */
 export function getDesiredCompositeResource(req: RunFunctionRequest): Resource | undefined {
-    return req.desired?.composite;
+  return req.desired?.composite;
 }
 
 /**
@@ -47,7 +47,7 @@ export function getDesiredCompositeResource(req: RunFunctionRequest): Resource |
  * ```
  */
 export function getObservedCompositeResource(req: RunFunctionRequest): Resource | undefined {
-    return req.observed?.composite;
+  return req.observed?.composite;
 }
 
 /**
@@ -69,10 +69,10 @@ export function getObservedCompositeResource(req: RunFunctionRequest): Resource 
  * ```
  */
 export function getDesiredComposedResources(req: RunFunctionRequest): { [key: string]: Resource } {
-    if (req.desired?.resources) {
-        return req.desired?.resources;
-    }
-    return {};
+  if (req.desired?.resources) {
+    return req.desired?.resources;
+  }
+  return {};
 }
 
 /**
@@ -96,10 +96,10 @@ export function getDesiredComposedResources(req: RunFunctionRequest): { [key: st
  * ```
  */
 export function getObservedComposedResources(req: RunFunctionRequest): { [key: string]: Resource } {
-    if (req.observed?.resources) {
-        return req.observed?.resources;
-    }
-    return {};
+  if (req.observed?.resources) {
+    return req.observed?.resources;
+  }
+  return {};
 }
 
 /**
@@ -122,7 +122,7 @@ export function getObservedComposedResources(req: RunFunctionRequest): { [key: s
  * ```
  */
 export function getInput(req: RunFunctionRequest): { [key: string]: any } | undefined {
-    return req.input;
+  return req.input;
 }
 
 /**
@@ -148,10 +148,10 @@ export function getInput(req: RunFunctionRequest): { [key: string]: any } | unde
  * ```
  */
 export function getContextKey(req: RunFunctionRequest, key: string): [any, boolean] {
-    if (req.context && key in req.context) {
-        return [req.context[key], true];
-    }
-    return [undefined, false];
+  if (req.context && key in req.context) {
+    return [req.context[key], true];
+  }
+  return [undefined, false];
 }
 
 /**
@@ -175,7 +175,7 @@ export function getContextKey(req: RunFunctionRequest, key: string): [any, boole
  * ```
  */
 export function getRequiredResources(req: RunFunctionRequest): { [key: string]: Resources } {
-    return req.requiredResources || {};
+  return req.requiredResources || {};
 }
 
 /**
@@ -191,7 +191,7 @@ export function getRequiredResources(req: RunFunctionRequest): { [key: string]: 
  * @returns A map of extra resources by name, or empty object if none exist
  */
 export function getExtraResources(req: RunFunctionRequest): { [key: string]: Resources } {
-    return req.extraResources || {};
+  return req.extraResources || {};
 }
 
 /**
@@ -220,9 +220,9 @@ export function getExtraResources(req: RunFunctionRequest): { [key: string]: Res
  * ```
  */
 export function getCredentials(req: RunFunctionRequest, name: string): Credentials {
-    const creds = req.credentials?.[name];
-    if (!creds) {
-        throw new Error(`credentials "${name}" not found`);
-    }
-    return creds;
+  const creds = req.credentials?.[name];
+  if (!creds) {
+    throw new Error(`credentials "${name}" not found`);
+  }
+  return creds;
 }
