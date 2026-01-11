@@ -6,41 +6,41 @@
  * of setting up a production-ready function server with proper security.
  */
 
-import * as grpc from "@grpc/grpc-js";
-import type { Logger } from "pino";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { FunctionRunner, getServer } from "../function/function.js";
+import * as grpc from '@grpc/grpc-js';
+import type { Logger } from 'pino';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { FunctionRunner, getServer } from '../function/function.js';
 
 /**
  * Configuration options for the gRPC server.
  */
 export interface ServerOptions {
-    /**
-     * The address to listen on (e.g., "0.0.0.0:9443" or ":9443")
-     * Default is ":9443" when using the CLI
-     */
-    address: string;
+  /**
+   * The address to listen on (e.g., "0.0.0.0:9443" or ":9443")
+   * Default is ":9443" when using the CLI
+   */
+  address: string;
 
-    /**
-     * Whether to run without TLS encryption.
-     * Set to true for local development only. Production should use TLS.
-     * Default: false
-     */
-    insecure?: boolean;
+  /**
+   * Whether to run without TLS encryption.
+   * Set to true for local development only. Production should use TLS.
+   * Default: false
+   */
+  insecure?: boolean;
 
-    /**
-     * Enable debug-level logging.
-     * Default: false
-     */
-    debug?: boolean;
+  /**
+   * Enable debug-level logging.
+   * Default: false
+   */
+  debug?: boolean;
 
-    /**
-     * Filesystem directory containing TLS certificates.
-     * Should contain: tls.key, tls.crt, and ca.crt
-     * Ignored if insecure is set to true.
-     */
-    tlsServerCertsDir?: string;
+  /**
+   * Filesystem directory containing TLS certificates.
+   * Should contain: tls.key, tls.crt, and ca.crt
+   * Ignored if insecure is set to true.
+   */
+  tlsServerCertsDir?: string;
 }
 
 /**
@@ -74,26 +74,24 @@ export interface ServerOptions {
  * });
  * ```
  */
-export function getServerCredentials(
-    opts?: ServerOptions,
-): grpc.ServerCredentials {
-    if (opts?.insecure || opts?.tlsServerCertsDir === "" || opts?.tlsServerCertsDir === undefined) {
-        return grpc.ServerCredentials.createInsecure();
-    }
+export function getServerCredentials(opts?: ServerOptions): grpc.ServerCredentials {
+  if (opts?.insecure || opts?.tlsServerCertsDir === '' || opts?.tlsServerCertsDir === undefined) {
+    return grpc.ServerCredentials.createInsecure();
+  }
 
-    const tlsCertsDir = opts.tlsServerCertsDir;
-    if (typeof tlsCertsDir !== "string" || tlsCertsDir.trim() === "") {
-        throw new Error("tlsServerCertsDir must be a non-empty string when TLS is enabled");
-    }
+  const tlsCertsDir = opts.tlsServerCertsDir;
+  if (typeof tlsCertsDir !== 'string' || tlsCertsDir.trim() === '') {
+    throw new Error('tlsServerCertsDir must be a non-empty string when TLS is enabled');
+  }
 
-    const privateKey = readFileSync(join(tlsCertsDir, "tls.key"));
-    const certChain = readFileSync(join(tlsCertsDir, "tls.crt"));
-    const rootCerts = readFileSync(join(tlsCertsDir, "ca.crt"));
-    return grpc.ServerCredentials.createSsl(
-        rootCerts,
-        [{ private_key: privateKey, cert_chain: certChain }],
-        false, // Set to false to make client certificates optional
-    );
+  const privateKey = readFileSync(join(tlsCertsDir, 'tls.key'));
+  const certChain = readFileSync(join(tlsCertsDir, 'tls.crt'));
+  const rootCerts = readFileSync(join(tlsCertsDir, 'ca.crt'));
+  return grpc.ServerCredentials.createSsl(
+    rootCerts,
+    [{ private_key: privateKey, cert_chain: certChain }],
+    false // Set to false to make client certificates optional
+  );
 }
 
 /**
@@ -115,11 +113,11 @@ export function getServerCredentials(
  * ```
  */
 export function newGrpcServer(functionRunner: FunctionRunner, logger: Logger): grpc.Server {
-    const server = getServer(functionRunner, logger);
-    if (logger) {
-        logger.debug("grpc server created");
-    }
-    return server;
+  const server = getServer(functionRunner, logger);
+  if (logger) {
+    logger.debug('grpc server created');
+  }
+  return server;
 }
 
 /**
@@ -154,19 +152,15 @@ export function newGrpcServer(functionRunner: FunctionRunner, logger: Logger): g
  * ```
  */
 export function startServer(server: grpc.Server, opts: ServerOptions, logger: Logger): grpc.Server {
-    const creds = getServerCredentials(opts);
-    logger.debug(`serverCredentials type: ${creds.constructor.name}`);
+  const creds = getServerCredentials(opts);
+  logger.debug(`serverCredentials type: ${creds.constructor.name}`);
 
-    server.bindAsync(
-        opts.address,
-        creds,
-        (err) => {
-            if (err) {
-                logger.error(`server bind error: ${err.message}`);
-                return;
-            }
-            logger.info(`server started and listening on ${opts.address}`);
-        }
-    );
-    return server;
+  server.bindAsync(opts.address, creds, (err) => {
+    if (err) {
+      logger.error(`server bind error: ${err.message}`);
+      return;
+    }
+    logger.info(`server started and listening on ${opts.address}`);
+  });
+  return server;
 }

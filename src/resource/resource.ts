@@ -1,5 +1,5 @@
 // Resource utilities for working with Kubernetes resources and protobuf conversion
-import { Resource, Ready } from "../proto/run_function.js";
+import { Resource, Ready } from '../proto/run_function.js';
 
 // Type aliases for better readability
 export type ConnectionDetails = { [key: string]: Buffer };
@@ -8,35 +8,35 @@ export type ConnectionDetails = { [key: string]: Buffer };
  * Composite represents a Crossplane composite resource (XR) with its state
  */
 export interface Composite {
-    resource: Resource;
-    connectionDetails: ConnectionDetails;
-    ready: Ready;
+  resource: Resource;
+  connectionDetails: ConnectionDetails;
+  ready: Ready;
 }
 
 /**
  * ObservedComposed represents the observed state of a composed resource
  */
 export interface ObservedComposed {
-    resource: Resource;
-    connectionDetails: ConnectionDetails;
+  resource: Resource;
+  connectionDetails: ConnectionDetails;
 }
 
 /**
  * DesiredComposed represents the desired state of a composed resource
  */
 export interface DesiredComposed {
-    resource: Resource;
-    ready: Ready;
+  resource: Resource;
+  ready: Ready;
 }
 
 /**
  * Create a new empty DesiredComposed resource
  */
 export function newDesiredComposed(): DesiredComposed {
-    return {
-        resource: Resource.fromJSON({}),
-        ready: Ready.READY_UNSPECIFIED,
-    };
+  return {
+    resource: Resource.fromJSON({}),
+    ready: Ready.READY_UNSPECIFIED,
+  };
 }
 
 /**
@@ -47,13 +47,13 @@ export function newDesiredComposed(): DesiredComposed {
  * @returns A plain JavaScript object representing the Kubernetes resource
  */
 export function asObject(struct: { [key: string]: any } | undefined): { [key: string]: any } {
-    if (!struct) {
-        return {};
-    }
+  if (!struct) {
+    return {};
+  }
 
-    // The struct is already a plain object in our TypeScript implementation
-    // In the Go SDK, this does actual protobuf conversion
-    return struct;
+  // The struct is already a plain object in our TypeScript implementation
+  // In the Go SDK, this does actual protobuf conversion
+  return struct;
 }
 
 /**
@@ -64,9 +64,9 @@ export function asObject(struct: { [key: string]: any } | undefined): { [key: st
  * @returns A protobuf Struct representation
  */
 export function asStruct(obj: { [key: string]: any }): { [key: string]: any } {
-    // In our TypeScript implementation, this is essentially a pass-through
-    // The actual conversion happens in the protobuf serialization layer
-    return obj;
+  // In our TypeScript implementation, this is essentially a pass-through
+  // The actual conversion happens in the protobuf serialization layer
+  return obj;
 }
 
 /**
@@ -78,11 +78,13 @@ export function asStruct(obj: { [key: string]: any }): { [key: string]: any } {
  * @throws Error if conversion fails
  */
 export function mustStructObject(obj: { [key: string]: any }): { [key: string]: any } {
-    try {
-        return asStruct(obj);
-    } catch (error) {
-        throw new Error(`Failed to convert object to struct: ${error instanceof Error ? error.message : String(error)}`);
-    }
+  try {
+    return asStruct(obj);
+  } catch (error) {
+    throw new Error(
+      `Failed to convert object to struct: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
 }
 
 /**
@@ -94,12 +96,14 @@ export function mustStructObject(obj: { [key: string]: any }): { [key: string]: 
  * @throws Error if parsing or conversion fails
  */
 export function mustStructJSON(json: string): { [key: string]: any } {
-    try {
-        const obj = JSON.parse(json);
-        return asStruct(obj);
-    } catch (error) {
-        throw new Error(`Failed to parse JSON to struct: ${error instanceof Error ? error.message : String(error)}`);
-    }
+  try {
+    const obj = JSON.parse(json);
+    return asStruct(obj);
+  } catch (error) {
+    throw new Error(
+      `Failed to parse JSON to struct: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
 }
 
 /**
@@ -112,15 +116,15 @@ export function mustStructJSON(json: string): { [key: string]: any } {
  * @returns A Resource
  */
 export function fromObject(
-    obj: { [key: string]: any },
-    connectionDetails?: ConnectionDetails,
-    ready?: Ready
+  obj: { [key: string]: any },
+  connectionDetails?: ConnectionDetails,
+  ready?: Ready
 ): Resource {
-    return Resource.fromJSON({
-        resource: obj,
-        connectionDetails: connectionDetails || {},
-        ready: ready !== undefined ? ready : Ready.READY_UNSPECIFIED,
-    });
+  return Resource.fromJSON({
+    resource: obj,
+    connectionDetails: connectionDetails || {},
+    ready: ready !== undefined ? ready : Ready.READY_UNSPECIFIED,
+  });
 }
 
 /**
@@ -131,5 +135,5 @@ export function fromObject(
  * @returns The plain JavaScript object, or undefined if not present
  */
 export function toObject(resource: Resource): { [key: string]: any } | undefined {
-    return resource.resource;
+  return resource.resource;
 }
