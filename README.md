@@ -1,6 +1,6 @@
 # Crossplane Function SDK for TypeScript
 
-A TypeScript SDK for building [Crossplane Composition Functions](https://docs.crossplane.io/latest/concepts/composition-functions/). This SDK provides type-safe interfaces and utilities for creating functions that generate and manage Crossplane resources.
+A TypeScript SDK for building [Crossplane Composition Functions](https://docs.crossplane.io/master/composition/compositions/). This SDK provides type-safe interfaces and utilities for creating functions that generate and manage Crossplane resources.
 
 ## Overview
 
@@ -391,7 +391,7 @@ If you're developing a function based on this SDK and need to containerize it:
 2. Build the image with your function code
 3. Package as a Crossplane function package
 
-See the [Crossplane documentation](https://docs.crossplane.io/latest/concepts/composition-functions/#build-a-function) for details on building and packaging functions.
+See the Crossplane docs [Releasing Crossplane Extensions](https://docs.crossplane.io/master/guides/extensions-release-process/) for details on building and packaging functions.
 
 ## Development
 
@@ -667,9 +667,9 @@ Apache 2.0
 ### Crossplane Documentation
 
 - [Crossplane Documentation](https://docs.crossplane.io)
-- [Composition Functions](https://docs.crossplane.io/latest/concepts/composition-functions/)
-- [Write a Composition Function](https://docs.crossplane.io/latest/concepts/composition-functions/#write-a-composition-function)
-- [Composition Function API](https://docs.crossplane.io/latest/concepts/composition-functions/#composition-function-api)
+- [Composition Functions](https://docs.crossplane.io/master/composition/compositions/#use-a-function-in-a-composition)
+- [Releasing Crossplane Extensions](https://docs.crossplane.io/master/guides/extensions-release-process/)
+
 
 ### SDK Documentation
 
