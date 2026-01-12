@@ -1,6 +1,6 @@
 # Crossplane Function SDK for TypeScript
 
-A TypeScript SDK for building [Crossplane Composition Functions](https://docs.crossplane.io/master/composition/compositions/). This SDK provides type-safe interfaces and utilities for creating functions that generate and manage Crossplane resources.
+A TypeScript SDK for building [Crossplane Composition Functions](https://docs.crossplane.io/latest/composition/compositions/). This SDK provides type-safe interfaces and utilities for creating functions that generate and manage Crossplane resources.
 
 ## Overview
 
@@ -391,7 +391,7 @@ If you're developing a function based on this SDK and need to containerize it:
 2. Build the image with your function code
 3. Package as a Crossplane function package
 
-See the Crossplane docs [Releasing Crossplane Extensions](https://docs.crossplane.io/master/guides/extensions-release-process/) for details on building and packaging functions.
+See the Crossplane docs [Releasing Crossplane Extensions](https://docs.crossplane.io/latest/guides/extensions-release-process/) for details on building and packaging functions.
 
 ## Development
 
@@ -667,8 +667,8 @@ Apache 2.0
 ### Crossplane Documentation
 
 - [Crossplane Documentation](https://docs.crossplane.io)
-- [Composition Functions](https://docs.crossplane.io/master/composition/compositions/#use-a-function-in-a-composition)
-- [Releasing Crossplane Extensions](https://docs.crossplane.io/master/guides/extensions-release-process/)
+- [Composition Functions](https://docs.crossplane.io/latest/composition/compositions/#use-a-function-in-a-composition)
+- [Releasing Crossplane Extensions](https://docs.crossplane.io/latest/guides/extensions-release-process/)
 
 
 ### SDK Documentation
@@ -680,4 +680,4 @@ Apache 2.0
 - [ts-proto](https://github.com/stephenh/ts-proto) - TypeScript protobuf code generator
 - [kubernetes-models](https://github.com/tommy351/kubernetes-models-ts) - Type-safe Kubernetes resource models for TypeScript
 - [Pino](https://getpino.io/) - Fast JSON logger
-- [gRPC-js](https://github.com/grpc/grpc-node/tree/master/packages/grpc-js) - Pure JavaScript gRPC implementation
+- [gRPC-js](https://github.com/grpc/grpc-node/tree/latest/packages/grpc-js) - Pure JavaScript gRPC implementation
