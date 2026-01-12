@@ -28,6 +28,7 @@
   ],
   "scripts": {
     "clean": "scripts/clean.sh",
+    "protoc-gen": "scripts/protoc-gen.sh",
     "build": "npx tsc",
     "pack": "npm pack",
     "prepublishOnly": "npm run build",
