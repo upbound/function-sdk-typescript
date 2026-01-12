@@ -680,4 +680,4 @@ Apache 2.0
 - [ts-proto](https://github.com/stephenh/ts-proto) - TypeScript protobuf code generator
 - [kubernetes-models](https://github.com/tommy351/kubernetes-models-ts) - Type-safe Kubernetes resource models for TypeScript
 - [Pino](https://getpino.io/) - Fast JSON logger
-- [gRPC-js](https://github.com/grpc/grpc-node/tree/latest/packages/grpc-js) - Pure JavaScript gRPC implementation
+- [gRPC-js](https://github.com/grpc/grpc-node/tree/master/packages/grpc-js) - Pure JavaScript gRPC implementation
