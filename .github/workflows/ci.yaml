@@ -24,6 +24,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
       - run: npm ci
 
+      # Update this version when ts-proto in package.json is updated
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
         with:
