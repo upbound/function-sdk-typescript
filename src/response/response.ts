@@ -263,7 +263,7 @@ export function setDesiredComposedResources(
  */
 export function setDesiredResources(
   rsp: RunFunctionResponse,
-  resources: { [key: string]: { [key: string]: any } }
+  resources: Record<string, Record<string, unknown>>
 ): RunFunctionResponse {
   // Ensure desired state exists
   if (!rsp.desired) {
@@ -337,7 +337,7 @@ export function setDesiredCompositeStatus({
   status,
 }: {
   rsp: RunFunctionResponse;
-  status: { [key: string]: any };
+  status: Record<string, unknown>;
 }): RunFunctionResponse {
   // Ensure desired state exists
   if (!rsp.desired) {
@@ -357,7 +357,7 @@ export function setDesiredCompositeStatus({
   // Merge the status
   rsp.desired.composite.resource = merge(rsp.desired.composite.resource, {
     status: status,
-  }) as { [key: string]: any };
+  }) as Record<string, unknown>;
 
   return rsp;
 }
@@ -384,7 +384,7 @@ export function setDesiredCompositeStatus({
 export function setContextKey(
   rsp: RunFunctionResponse,
   key: string,
-  value: any
+  value: unknown
 ): RunFunctionResponse {
   if (!rsp.context) {
     rsp.context = {};
@@ -459,7 +459,7 @@ export function setDesiredCompositeResource(
  */
 export function setOutput(
   rsp: RunFunctionResponse,
-  output: { [key: string]: any }
+  output: Record<string, unknown>
 ): RunFunctionResponse {
   rsp.output = output;
   return rsp;

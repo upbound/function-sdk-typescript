@@ -121,7 +121,7 @@ export function getObservedComposedResources(req: RunFunctionRequest): { [key: s
  * }
  * ```
  */
-export function getInput(req: RunFunctionRequest): { [key: string]: any } | undefined {
+export function getInput(req: RunFunctionRequest): Record<string, unknown> | undefined {
   return req.input;
 }
 
@@ -147,7 +147,7 @@ export function getInput(req: RunFunctionRequest): { [key: string]: any } | unde
  * }
  * ```
  */
-export function getContextKey(req: RunFunctionRequest, key: string): [any, boolean] {
+export function getContextKey(req: RunFunctionRequest, key: string): [unknown, boolean] {
   if (req.context && key in req.context) {
     return [req.context[key], true];
   }
