@@ -1,6 +1,6 @@
 {
   "name": "@crossplane-org/function-sdk-typescript",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A Crossplane Function SDK for Typescript",
   "keywords": [
     "crossplane",
@@ -9,7 +9,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "github.com/upbound/function-sdk-typescript"
+    "url": "github.com/crossplane/function-sdk-typescript"
   },
   "license": "Apache-2.0",
   "author": "Steven Borrelli",
