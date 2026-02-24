@@ -1,3 +1,6 @@
+**This repository has moved to the Crossplane GitHub org at <https://github.com/crossplane/function-sdk-typescript>**
+
+
 # Crossplane Function SDK for TypeScript
 
 A TypeScript SDK for building [Crossplane Composition Functions](https://docs.crossplane.io/latest/composition/compositions/). This SDK provides type-safe interfaces and utilities for creating functions that generate and manage Crossplane resources.
